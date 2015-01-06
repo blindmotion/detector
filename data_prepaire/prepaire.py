@@ -9,13 +9,14 @@ import datetime
 from optparse import OptionParser
 from datetime import timedelta
 from scipy.interpolate import interp1d
-from time import sleep
 
 ACC_KEY = '1'
 GYR_KEY = '4'
 ACC_KEY_INT = 1
 GYR_KEY_INT = 4
 GEO_KEY = 'geo'
+TYPE_KEY = 'type'
+DIRECTION_KEY = 'direction'
 TYPE_INDX = 0
 TIME_INDX = 1
 X_INDX = 3
@@ -23,8 +24,14 @@ Y_INDX = 4
 Z_INDX = 5
 SPD_INDX = 9
 SpeedCoefficient = 3.6
+EVENT_START = 'start'
+EVENT_END = 'end'
 
-TIME_DELTA_SECONDS = 10
+EVENT_TYPE_IDLE = -1
+EVENT_DIR_LEFT = 0
+
+TIME_DELTA_IDLE_START_END = timedelta(seconds=10)
+TIME_DELTA_EVENTS = timedelta(milliseconds=500)
 NUM_ELEMENTS_GYR_ACC = 100
 NUM_ELEMENTS_SPEED = 10
 
@@ -75,21 +82,23 @@ def parse_row(row):
         row[X_INDX] = float(row[X_INDX])
         row[Y_INDX] = float(row[Y_INDX])
         row[Z_INDX] = float(row[Z_INDX])
+        row[TIME_INDX] = datetime.datetime.strptime(row[TIME_INDX], '%H:%M:%S.%f')
+        return row
 
     if row[TYPE_INDX] == GEO_KEY:
         row[SPD_INDX] = float(row[SPD_INDX]) * SpeedCoefficient
+        row[TIME_INDX] = datetime.datetime.strptime(row[TIME_INDX], '%H:%M:%S.%f')
+        return row
 
-    row[TIME_INDX] = datetime.datetime.strptime(row[TIME_INDX], '%H:%M:%S.%f')
-
-    return row
+    return None
 
 
 def load_events(eventsfile):
     with open(eventsfile, 'rb') as file:
         events = json.load(file)
         for event in events:
-            event['start'] = datetime.datetime.strptime(event['start'], '%H:%M:%S')
-            event['end'] = datetime.datetime.strptime(event['end'], '%H:%M:%S')
+            event[EVENT_START] = datetime.datetime.strptime(event[EVENT_START], '%H:%M:%S')
+            event[EVENT_END] = datetime.datetime.strptime(event[EVENT_END], '%H:%M:%S')
 
         return events
 
@@ -103,7 +112,9 @@ def load_data(inputfile):
 
         for row in csvreader:
             try:
-                data.append(parse_row(row))
+                parsed = parse_row(row)
+                if parsed is not None:
+                    data.append(parsed)
             except ValueError:
                 num_errors += 1
 
@@ -117,7 +128,7 @@ def sort_data_by_time(data):
     return sorted(data, key=lambda row: row[TIME_INDX])
 
 
-def get_data_for_interval(data, start_indx, end_indx):
+def get_data_for_interval(data, start_indx, end_indx, event_type, event_dir):
     if start_indx < 0 or end_indx >= len(data):
         raise IndexError('index out of range')
 
@@ -134,7 +145,9 @@ def get_data_for_interval(data, start_indx, end_indx):
         },
         GEO_KEY: {
             'spd': []
-        }
+        },
+        TYPE_KEY: event_type,
+        DIRECTION_KEY: event_dir
     }
 
     for i in xrange(start_indx, end_indx + 1):
@@ -177,8 +190,15 @@ def interpolate_array(arr, num_el):
     x = [i for i in xrange(len(arr))]
     y = arr
 
+    # due to rounding issues we need to prolong array by one element
+    x += [x[-1] + 1]
+    y += [arr[-1]]
+
     intrpl = interp1d(x, y)
-    result = [intrpl(i * one_el_len)[()] for i in xrange(num_el)]
+    try:
+        result = [intrpl(i * one_el_len)[()] for i in xrange(num_el)]
+    except ValueError:
+        raise
 
     return result
 
@@ -189,26 +209,82 @@ def write_one_row(data, file):
         data[GEO_KEY]['spd']
 
     writer = csv.writer(file, delimiter=',', quoting=csv.QUOTE_NONE)
-    writer.writerow(['{0:.3f}'.format(x) for x in row])
+    writer.writerow([data[TYPE_KEY], data[DIRECTION_KEY]] + ['{0:.3f}'.format(x) for x in row])
 
 
-def write_idle_data(data, file):
+def is_event_overlapped(events, start_date, end_date):
+    for event in events:
+        if event[EVENT_START] <= start_date <= event[EVENT_END]:
+            return True
+        if event[EVENT_START] <= end_date <= event[EVENT_END]:
+            return True
+
+    return False
+
+
+def write_idle_data(data, events, file):
     for start_indx in xrange(0, len(data)):
         start_date = data[start_indx][TIME_INDX]
-        end_date = start_date + timedelta(seconds=TIME_DELTA_SECONDS)
+        end_date = start_date + TIME_DELTA_IDLE_START_END
         end_indx = bsearch(data, end_date, 0, len(data) - 1,
                             lambda row: row[TIME_INDX])
 
         if end_date > data[len(data)-1][TIME_INDX]:
             break
 
-        data_for_interval = get_data_for_interval(data, start_indx, end_indx)
+        if is_event_overlapped(events, start_date, end_date):
+            continue
+
+        data_for_interval = get_data_for_interval(data, start_indx, end_indx, EVENT_TYPE_IDLE, EVENT_DIR_LEFT)
         write_one_row(data_for_interval, file)
 
-        sys.stdout.write("\r%d" % start_indx)
+        sys.stdout.write("\r%d of %d" % (start_indx, len(data)) )
         sys.stdout.flush()
 
     print ''
+
+def write_event_data(data, event, start_indx, end_indx, file):
+    cur_indx = start_indx
+    duration = event[EVENT_END] - event[EVENT_START]
+    cur_end_time = data[cur_indx][TIME_INDX] + duration
+    end_time = data[end_indx][TIME_INDX]
+
+    while cur_end_time < end_time:
+        cur_indx_plus_dur = bsearch(data, cur_end_time, 0, len(data) - 1,
+                            lambda row: row[TIME_INDX])
+        data_for_interval = get_data_for_interval(data, cur_indx, cur_indx_plus_dur, event[TYPE_KEY], event[DIRECTION_KEY])
+        write_one_row(data_for_interval, file)
+
+        cur_indx += 1
+        cur_end_time = data[cur_indx][TIME_INDX] + duration
+
+def write_events_data(data, events, file):
+    for event_id in xrange(len(events)):
+        event = events[event_id]
+        sys.stdout.write("\rprocessing event %d of %d" % (event_id + 1, len(events)) )
+        sys.stdout.flush()
+
+        if data[0][TIME_INDX] <= event[EVENT_START] \
+                and event[EVENT_END] <= data[len(data) - 1][TIME_INDX]:
+
+            event_start_indx = bsearch(data, event[EVENT_START], 0, len(data) - 1,
+                            lambda row: row[TIME_INDX])
+
+            event_end_indx = bsearch(data, event[EVENT_END], 0, len(data) - 1,
+                            lambda row: row[TIME_INDX])
+
+            event_start_plus_dt = event[EVENT_START] - TIME_DELTA_EVENTS
+            event_end_plus_dt = event[EVENT_END] + TIME_DELTA_EVENTS
+
+            while event_start_indx > 0 and \
+                    data[event_start_indx][TIME_INDX] > event_start_plus_dt:
+                event_start_indx -= 1
+
+            while event_end_indx < len(data) - 1 and \
+                    data[event_end_indx][TIME_INDX] < event_end_plus_dt:
+                event_end_indx += 1
+
+            write_event_data(data, event, event_start_indx, event_end_indx, file)
 
 
 def main():
@@ -218,7 +294,8 @@ def main():
     data = sort_data_by_time(data)
 
     with open(options.outputfile, 'wb') as output:
-        write_idle_data(data, output)
+        write_events_data(data, events, output)
+        write_idle_data(data, events, output)
 
 
 if __name__ == '__main__':
