@@ -27,7 +27,12 @@ z2 = a1 * Theta1';
 a2 = sigmoid(z2);
 a22 = [ones(size(a2)(1), 1) a2];
 z3 = a22 * Theta2';
-a3 = h0 = sigmoid(z3);
+a3 = sigmoid(z3);
+a33 = [ones(size(a3)(1), 1) a3];
+z4 = a33 * Theta3';
+a4 = sigmoid(z4);
+
+h0 = a4;
 
 [dummy, p] = max(h0');
 
