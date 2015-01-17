@@ -8,18 +8,21 @@ fileDat = arg_list{1};
 
 load(fileDat)
 
-%X = X(1:500,:);
-%y = y(1:500,:);
+[X_ax, mu_ax, sigma_ax] = featureNormalize(X(:,1:20));
+[X_ay, mu_ay, sigma_ay] = featureNormalize(X(:,21:40));
+[X_az, mu_az, sigma_az] = featureNormalize(X(:,41:60));
+[X_gx, mu_gx, sigma_gx] = featureNormalize(X(:,61:80));
+[X_gy, mu_gy, sigma_gy] = featureNormalize(X(:,81:100));
+[X_gz, mu_gz, sigma_gz] = featureNormalize(X(:,101:120));
+[X_s, mu_s, sigma_s] = featureNormalize(X(:,121:125));
+X = [X_ax X_ay X_az X_gx X_gy X_gz X_s];
+X = [X_ay X_ax X_s];
 
-[X, mu, sigma] = featureNormalize(X);
-
-X = [X];
-%y = Y(1:end,2);
 c = 24 * 7 * 4;
 Xtrain = X(1:end,1:end);
 ytrain = y(1:end,1);
-lambda = 70;
-maxIter = 120;
+lambda = 10;
+maxIter = 360;
 tolFun = 1e-6;
 input_layer_size  = size(Xtrain, 2);
 hidden_layer_size = 8;
@@ -58,7 +61,5 @@ cost
 
 toc
 
-save theta1.mat Theta1
-save theta2.mat Theta2
-csvwrite('theta1.csv', Theta1)
-csvwrite('theta2.csv', Theta2)
+save result.mat Theta1 Theta2 mu_ax sigma_ax mu_ay sigma_ay mu_az sigma_az ...
+            mu_gx sigma_gx mu_gy sigma_gy mu_gz sigma_gz mu_s sigma_s

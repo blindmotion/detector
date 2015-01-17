@@ -3,13 +3,22 @@ format none
 source code.m
 
 arg_list = argv();
-fileTheta1 = arg_list{1};
-fileTheta2 = arg_list{2};
-fileXy = arg_list{3};
+fileResult = arg_list{1};
+fileXy = arg_list{2};
 
-load(fileTheta1);
-load(fileTheta2);
+load(fileResult);
 load(fileXy);
+
+X_ax = (X(:,1:20) - mu_ax) ./ sigma_ax;
+X_ay = (X(:,21:40) - mu_ay) ./ sigma_ay;
+X_az = (X(:,41:60) - mu_az) ./ sigma_az;
+X_gx = (X(:,61:80) - mu_gx) ./ sigma_gx;
+X_gy = (X(:,81:100) - mu_gy) ./ sigma_gy;
+X_gz = (X(:,101:120) - mu_gz) ./ sigma_gz;
+X_s = (X(:,121:125) - mu_s) ./ sigma_s;
+
+X = [X_ax X_ay X_az X_gx X_gy X_gz X_s];
+X = [X_ay X_ax X_s];
 
 a1 = [ones(size(X)(1),1) X];
 z2 = a1 * Theta1';
