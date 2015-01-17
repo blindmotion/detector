@@ -55,4 +55,6 @@ Reg2(:,1) = 0;
 Theta1_grad += Reg1;
 Theta2_grad += Reg2;
 
+grad = [Theta1_grad(:) ; Theta2_grad(:)];
+
 end

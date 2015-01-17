@@ -18,11 +18,11 @@ X = [X];
 c = 24 * 7 * 4;
 Xtrain = X(1:end,1:end);
 ytrain = y(1:end,1);
-lambda = 100;
+lambda = 70;
 maxIter = 120;
-tolFun = 1e-5;
+tolFun = 1e-6;
 input_layer_size  = size(Xtrain, 2);
-hidden_layer_size = 64;
+hidden_layer_size = 8;
 num_outputs = 15;
 
 tic
@@ -39,7 +39,8 @@ nn_params = [initial_Theta1(:) ; initial_Theta2(:)];
 
 [J, grad] = nnCostFunction(nn_params, input_layer_size, hidden_layer_size, num_outputs, Xtrain, ytrain, lambda);
 
-options = optimset('MaxIter', maxIter, 'OutputFcn', @outfun, 'TolFun', tolFun);
+options = optimset('MaxIter', maxIter, 'OutputFcn', @outfun, 'TolFun', tolFun,
+    'GradObj', 'on');
 
 costFunction = @(p) nnCostFunction(p, ...
                                    input_layer_size, hidden_layer_size, num_outputs, Xtrain, ytrain, lambda);
