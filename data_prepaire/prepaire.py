@@ -32,8 +32,12 @@ EVENT_DIR_LEFT = 0
 
 TIME_DELTA_IDLE_START_END = timedelta(seconds=10)
 TIME_DELTA_EVENTS = timedelta(milliseconds=500)
-NUM_ELEMENTS_GYR_ACC = 100
-NUM_ELEMENTS_SPEED = 10
+IDLE_TO_EVENTS_RELATION = 1
+
+num_elements_gyr_acc = 100
+num_elements_speed = 10
+
+time_delta_events = TIME_DELTA_EVENTS
 
 
 def bsearch(arr, searchValue, left, right, extr=lambda v: v):
@@ -53,6 +57,10 @@ def bsearch(arr, searchValue, left, right, extr=lambda v: v):
 
 
 def get_options():
+    global num_elements_speed
+    global num_elements_gyr_acc
+    global time_delta_events
+
     parser = OptionParser()
     parser.add_option("-i", "--inputfile", dest="inputfile",
                     help="Input csv file")
@@ -60,18 +68,31 @@ def get_options():
                     help="Json file with events")
     parser.add_option("-o", "--outputfile", dest="outputfile",
                     help="The name of output file")
-    parser.add_option("-s", "--shift", dest="shift",
+    parser.add_option("-t", "--time-delta-events-msec", dest="time_delta_events_msec",
                     help="Additional shift for data window in seconds")
-    parser.add_option("-t", "--shift-step", dest="shift_step",
-                    help="Length of one shift step in seconds")
+    parser.add_option("-g", "--num-el-gyr-acc", dest="num_el_gyr_acc",
+                    help="Number of output elements for gyroscope and accelerometer")
+    parser.add_option("-d", "--num-el-speed", dest="num_el_speed",
+                    help="Number of output elements for speed")
 
     (options, args) = parser.parse_args()
 
+
     if not options.inputfile or not options.outputfile \
-            or not options.shift or not options.shift_step \
+            or not options.time_delta_events_msec \
             or not options.eventsfile:
 
         raise KeyError('Not all required options specified')
+
+    if options.num_el_speed:
+        num_elements_speed = int(options.num_el_speed)
+
+    if options.num_el_gyr_acc:
+        num_elements_gyr_acc = int(options.num_el_gyr_acc)
+
+    if options.time_delta_events_msec:
+        time_delta_events = \
+            timedelta(milliseconds=int(options.time_delta_events_msec))
 
     return options
 
@@ -163,15 +184,15 @@ def get_data_for_interval(data, start_indx, end_indx, event_type, event_dir):
         if row[TYPE_INDX] == GEO_KEY:
             result[GEO_KEY]['spd'].append(row[SPD_INDX])
 
-    result[ACC_KEY]['x'] = interpolate_array(result[ACC_KEY]['x'], NUM_ELEMENTS_GYR_ACC)
-    result[ACC_KEY]['y'] = interpolate_array(result[ACC_KEY]['y'], NUM_ELEMENTS_GYR_ACC)
-    result[ACC_KEY]['z'] = interpolate_array(result[ACC_KEY]['z'], NUM_ELEMENTS_GYR_ACC)
+    result[ACC_KEY]['x'] = interpolate_array(result[ACC_KEY]['x'], num_elements_gyr_acc)
+    result[ACC_KEY]['y'] = interpolate_array(result[ACC_KEY]['y'], num_elements_gyr_acc)
+    result[ACC_KEY]['z'] = interpolate_array(result[ACC_KEY]['z'], num_elements_gyr_acc)
 
-    result[GYR_KEY]['x'] = interpolate_array(result[GYR_KEY]['x'], NUM_ELEMENTS_GYR_ACC)
-    result[GYR_KEY]['y'] = interpolate_array(result[GYR_KEY]['y'], NUM_ELEMENTS_GYR_ACC)
-    result[GYR_KEY]['z'] = interpolate_array(result[GYR_KEY]['z'], NUM_ELEMENTS_GYR_ACC)
+    result[GYR_KEY]['x'] = interpolate_array(result[GYR_KEY]['x'], num_elements_gyr_acc)
+    result[GYR_KEY]['y'] = interpolate_array(result[GYR_KEY]['y'], num_elements_gyr_acc)
+    result[GYR_KEY]['z'] = interpolate_array(result[GYR_KEY]['z'], num_elements_gyr_acc)
 
-    result[GEO_KEY]['spd'] = interpolate_array(result[GEO_KEY]['spd'], NUM_ELEMENTS_SPEED)
+    result[GEO_KEY]['spd'] = interpolate_array(result[GEO_KEY]['spd'], num_elements_speed)
 
     return result
 
@@ -208,8 +229,16 @@ def write_one_row(data, file):
         data[GYR_KEY]['x'] + data[GYR_KEY]['y'] + data[GYR_KEY]['z'] + \
         data[GEO_KEY]['spd']
 
+    row = data[ACC_KEY]['y']
+
+    if data[TYPE_KEY] != EVENT_TYPE_IDLE:
+        type_arr = [(data[TYPE_KEY] + 1) * 2 + data[DIRECTION_KEY]]
+    else:
+        type_arr = [1]
+
+
     writer = csv.writer(file, delimiter=',', quoting=csv.QUOTE_NONE)
-    writer.writerow([data[TYPE_KEY], data[DIRECTION_KEY]] + ['{0:.3f}'.format(x) for x in row])
+    writer.writerow(type_arr + ['{0:.3f}'.format(x) for x in row])
 
 
 def is_event_overlapped(events, start_date, end_date):
@@ -223,7 +252,7 @@ def is_event_overlapped(events, start_date, end_date):
 
 
 def write_idle_data(data, events, file):
-    for start_indx in xrange(0, len(data)):
+    for start_indx in xrange(0, len(data), IDLE_TO_EVENTS_RELATION):
         start_date = data[start_indx][TIME_INDX]
         end_date = start_date + TIME_DELTA_IDLE_START_END
         end_indx = bsearch(data, end_date, 0, len(data) - 1,
@@ -258,6 +287,7 @@ def write_event_data(data, event, start_indx, end_indx, file):
         cur_indx += 1
         cur_end_time = data[cur_indx][TIME_INDX] + duration
 
+
 def write_events_data(data, events, file):
     for event_id in xrange(len(events)):
         event = events[event_id]
@@ -273,8 +303,8 @@ def write_events_data(data, events, file):
             event_end_indx = bsearch(data, event[EVENT_END], 0, len(data) - 1,
                             lambda row: row[TIME_INDX])
 
-            event_start_plus_dt = event[EVENT_START] - TIME_DELTA_EVENTS
-            event_end_plus_dt = event[EVENT_END] + TIME_DELTA_EVENTS
+            event_start_plus_dt = event[EVENT_START] - time_delta_events
+            event_end_plus_dt = event[EVENT_END] + time_delta_events
 
             while event_start_indx > 0 and \
                     data[event_start_indx][TIME_INDX] > event_start_plus_dt:

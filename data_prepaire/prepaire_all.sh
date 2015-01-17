@@ -1,0 +1,6 @@
+#!/bin/sh
+/usr/bin/python -u /home/lamerman/work/ml/BlindMotionProject/code/detector/data_prepaire/prepaire.py -i /home/lamerman/work/ml/BlindMotionProject/Sensors/2014-09-18_SensorDatafile_smooth.csv -o /mnt/ramfs/out-2014-09-18.csv --time-delta-events-msec 500 --num-el-gyr-acc 40 --num-el-speed 5 -e /home/lamerman/work/ml/BlindMotionProject/Events/20140918/all.json
+/usr/bin/python -u /home/lamerman/work/ml/BlindMotionProject/code/detector/data_prepaire/prepaire.py -i /home/lamerman/work/ml/BlindMotionProject/Sensors/2014-09-17_SensorDatafile_smooth.csv -o /mnt/ramfs/out-2014-09-17.csv --time-delta-events-msec 500 --num-el-gyr-acc 40 --num-el-speed 5 -e /home/lamerman/work/ml/BlindMotionProject/Events/20140917/all.json
+/usr/bin/python -u /home/lamerman/work/ml/BlindMotionProject/code/detector/data_prepaire/prepaire.py -i /home/lamerman/work/ml/BlindMotionProject/Sensors/2014-12-16_SensorDatafile_smooth.csv -o /mnt/ramfs/out-2014-12-16.csv --time-delta-events-msec 500 --num-el-gyr-acc 40 --num-el-speed 5 -e /home/lamerman/work/ml/BlindMotionProject/Events/20141216/all.json
+cat /mnt/ramfs/out-2014-*.csv > /mnt/ramfs/out.csv
+octave -q ~/work/ml/BlindMotionProject/code/detector/core/prepaire.m /mnt/ramfs/out.csv /mnt/ramfs/out.mat
