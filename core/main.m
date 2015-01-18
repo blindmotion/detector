@@ -26,8 +26,8 @@ lambda = 10;
 maxIter = 360;
 tolFun = 1e-6;
 input_layer_size  = size(Xtrain, 2);
-hidden_layer1_size = 4;
-hidden_layer2_size = 4;
+hidden_layer1_size = 8;
+hidden_layer2_size = 8;
 num_outputs = 15;
 
 tic
