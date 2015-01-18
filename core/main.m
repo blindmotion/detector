@@ -15,8 +15,9 @@ load(fileDat)
 [X_gy, mu_gy, sigma_gy] = featureNormalize(X(:,81:100));
 [X_gz, mu_gz, sigma_gz] = featureNormalize(X(:,101:120));
 [X_s, mu_s, sigma_s] = featureNormalize(X(:,121:125));
-X = [X_ax X_ay X_az X_gx X_gy X_gz X_s];
-X = [X_ay X_ax X_s];
+[X_t, mu_t, sigma_t] = featureNormalize(X(:,126:126));
+X = [X_ax X_ay X_az X_gx X_gy X_gz X_s X_t];
+X = [X_ay X_ax X_s X_t];
 
 c = 24 * 7 * 4;
 Xtrain = X(1:end,1:end);
@@ -25,7 +26,7 @@ lambda = 10;
 maxIter = 360;
 tolFun = 1e-6;
 input_layer_size  = size(Xtrain, 2);
-hidden_layer_size = 8;
+hidden_layer_size = 16;
 num_outputs = 15;
 
 tic
@@ -62,4 +63,5 @@ cost
 toc
 
 save result.mat Theta1 Theta2 mu_ax sigma_ax mu_ay sigma_ay mu_az sigma_az ...
-            mu_gx sigma_gx mu_gy sigma_gy mu_gz sigma_gz mu_s sigma_s
+            mu_gx sigma_gx mu_gy sigma_gy mu_gz sigma_gz mu_s sigma_s ...
+            mu_t sigma_t

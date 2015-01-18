@@ -16,9 +16,10 @@ X_gx = (X(:,61:80) - mu_gx) ./ sigma_gx;
 X_gy = (X(:,81:100) - mu_gy) ./ sigma_gy;
 X_gz = (X(:,101:120) - mu_gz) ./ sigma_gz;
 X_s = (X(:,121:125) - mu_s) ./ sigma_s;
+X_t = (X(:,126:126) - mu_t) ./ sigma_t;
 
-X = [X_ax X_ay X_az X_gx X_gy X_gz X_s];
-X = [X_ay X_ax X_s];
+X = [X_ax X_ay X_az X_gx X_gy X_gz X_s X_t];
+X = [X_ay X_ax X_s X_t];
 
 a1 = [ones(size(X)(1),1) X];
 z2 = a1 * Theta1';

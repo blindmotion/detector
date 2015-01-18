@@ -6,6 +6,7 @@ import csv
 import json
 import sys
 import datetime
+from random import randint
 from optparse import OptionParser
 from datetime import timedelta
 from scipy.interpolate import interp1d
@@ -15,6 +16,7 @@ GYR_KEY = '4'
 ACC_KEY_INT = 1
 GYR_KEY_INT = 4
 GEO_KEY = 'geo'
+TIME_KEY = 'time'
 TYPE_KEY = 'type'
 DIRECTION_KEY = 'direction'
 TYPE_INDX = 0
@@ -194,6 +196,9 @@ def get_data_for_interval(data, start_indx, end_indx, event_type, event_dir):
 
     result[GEO_KEY]['spd'] = interpolate_array(result[GEO_KEY]['spd'], num_elements_speed)
 
+    duration = data[end_indx][TIME_INDX] - data[start_indx][TIME_INDX]
+    result[TIME_KEY] = [duration.seconds*1000 + duration.microseconds/1000]
+
     return result
 
 
@@ -227,7 +232,7 @@ def interpolate_array(arr, num_el):
 def write_one_row(data, file):
     row = data[ACC_KEY]['x'] + data[ACC_KEY]['y'] + data[ACC_KEY]['z'] + \
         data[GYR_KEY]['x'] + data[GYR_KEY]['y'] + data[GYR_KEY]['z'] + \
-        data[GEO_KEY]['spd']
+        data[GEO_KEY]['spd'] + data[TIME_KEY]
 
     #row = data[ACC_KEY]['x'] + data[ACC_KEY]['y'] + data[GEO_KEY]['spd']
 
@@ -254,7 +259,8 @@ def is_event_overlapped(events, start_date, end_date):
 def write_idle_data(data, events, file):
     for start_indx in xrange(0, len(data), IDLE_TO_EVENTS_RELATION):
         start_date = data[start_indx][TIME_INDX]
-        end_date = start_date + TIME_DELTA_IDLE_START_END
+        end_date = start_date + \
+            timedelta(seconds=randint(3,10), milliseconds=randint(0,999))
         end_indx = bsearch(data, end_date, 0, len(data) - 1,
                             lambda row: row[TIME_INDX])
 
