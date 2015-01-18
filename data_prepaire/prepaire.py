@@ -229,7 +229,7 @@ def write_one_row(data, file):
         data[GYR_KEY]['x'] + data[GYR_KEY]['y'] + data[GYR_KEY]['z'] + \
         data[GEO_KEY]['spd']
 
-    row = data[ACC_KEY]['y']
+    #row = data[ACC_KEY]['x'] + data[ACC_KEY]['y'] + data[GEO_KEY]['spd']
 
     if data[TYPE_KEY] != EVENT_TYPE_IDLE:
         type_arr = [(data[TYPE_KEY] + 1) * 2 + data[DIRECTION_KEY]]
