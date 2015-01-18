@@ -1,4 +1,5 @@
 format none
+warning("off")
 
 source code.m
 

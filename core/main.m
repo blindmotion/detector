@@ -6,7 +6,7 @@ warning("off")
 arg_list = argv();
 fileDat = arg_list{1};
 
-load(fileDat)
+load(fileDat);
 
 [X_ax, mu_ax, sigma_ax] = featureNormalize(X(:,1:20));
 [X_ay, mu_ay, sigma_ay] = featureNormalize(X(:,21:40));
@@ -26,14 +26,13 @@ lambda = 10;
 maxIter = 360;
 tolFun = 1e-6;
 input_layer_size  = size(Xtrain, 2);
-hidden_layer_size = 16;
+hidden_layer_size = 8;
 num_outputs = 15;
 
 tic
 
 function stop = outfun(x,optimValues,state)
-    printf("Iteration %s", disp(optimValues.iter))
-    printf("Cost %s \n", disp(optimValues.fval))
+    printf("\rIteration %i, Cost %f", optimValues.iter, optimValues.fval);
 end
 
 initial_Theta1 = randInitializeWeights(input_layer_size, hidden_layer_size);
@@ -57,6 +56,7 @@ Theta1 = reshape(nn_params(1:hidden_layer_size * (input_layer_size + 1)), ...
 Theta2 = reshape(nn_params((1 + (hidden_layer_size * (input_layer_size + 1))):end), ...
                  num_outputs, (hidden_layer_size + 1));
 
+printf('\n\n')
 J
 cost
 
