@@ -31,8 +31,11 @@ a3 = sigmoid(z3);
 a33 = [ones(size(a3)(1), 1) a3];
 z4 = a33 * Theta3';
 a4 = sigmoid(z4);
+a44 = [ones(size(a4)(1), 1) a4];
+z5 = a44 * Theta4';
+a5 = sigmoid(z5);
 
-h0 = a4;
+h0 = a5;
 
 [dummy, p] = max(h0');
 
