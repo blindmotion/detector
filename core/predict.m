@@ -111,3 +111,15 @@ indx = y == 15;
 if sum(y(indx)) > 0
   fprintf('\nAccuracy For 180 Left: %f, Num %d\n', mean(double(p'(indx) == y(indx))) * 100, sum(y(indx)));
 endif
+
+if (false)
+    randname = md5sum(mat2str(rand(1,1)), true);
+    fprintf('\nSaving as %s\n', randname);
+
+    filepath = sprintf('results/all/%s.mat', randname);
+
+    save (filepath, "Theta1", "Theta2", "Theta3", "Theta4", ...
+        "mu_ax", "sigma_ax", "mu_ay", "sigma_ay", "mu_az", "sigma_az", ...
+        "mu_gx", "sigma_gx", "mu_gy", "sigma_gy", "mu_gz", "sigma_gz", "mu_s", "sigma_s", ...
+        "mu_t", "sigma_t")
+endif

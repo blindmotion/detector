@@ -3,7 +3,7 @@ warning("off")
 
 source code.m
 
-THRESHOLD = 0.95;
+THRESHOLD = 0.99;
 
 arg_list = argv();
 fileResult = arg_list{1};
@@ -31,7 +31,15 @@ z2 = a1 * Theta1';
 a2 = sigmoid(z2);
 a22 = [ones(size(a2)(1), 1) a2];
 z3 = a22 * Theta2';
-a3 = h0 = sigmoid(z3);
+a3 = sigmoid(z3);
+a33 = [ones(size(a3)(1), 1) a3];
+z4 = a33 * Theta3';
+a4 = sigmoid(z4);
+a44 = [ones(size(a4)(1), 1) a4];
+z5 = a44 * Theta4';
+a5 = sigmoid(z5);
+
+h0 = a5;
 
 [prob, y] = max(h0');
 y = y';
