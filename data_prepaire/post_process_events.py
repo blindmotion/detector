@@ -88,7 +88,7 @@ def main():
     time = np.matrix(time)
     all = np.concatenate((data, time), axis=1)
 
-    res = DBSCAN(eps=3,min_samples=2).fit_predict(all[:, 2] + all[:, 0] * SECONDS_IN_DAY)
+    res = DBSCAN(eps=8,min_samples=9).fit_predict(all[:, 2] + all[:, 0] * SECONDS_IN_DAY)
 
     num_clusters = max(res) + 1
     result = np.zeros(shape=(num_clusters, all.shape[1]))
