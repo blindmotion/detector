@@ -17,12 +17,12 @@ load(fileDat);
 [X_s, mu_s, sigma_s] = featureNormalize(X(:,121:125));
 [X_t, mu_t, sigma_t] = featureNormalize(X(:,126:126));
 X = [X_ax X_ay X_az X_gx X_gy X_gz X_s X_t];
-X = [X_ay X_ax X_s X_t];
+X = [X_ay X_ax X_s X_t X_gz];
 
 c = 24 * 7 * 4;
 Xtrain = X(1:end,1:end);
 ytrain = y(1:end,1);
-lambda = 1;
+lambda = 15;
 maxIter = 10000;
 tolFun = 1e-7;
 input_layer_size  = size(Xtrain, 2);

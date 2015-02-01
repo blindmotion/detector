@@ -3,7 +3,7 @@ warning("off")
 
 source code.m
 
-THRESHOLD = 0.99;
+THRESHOLD = 0.96;
 
 arg_list = argv();
 fileResult = arg_list{1};
@@ -24,7 +24,7 @@ X_gz = (X(:,101:120) - mu_gz) ./ sigma_gz;
 X_s = (X(:,121:125) - mu_s) ./ sigma_s;
 X_t = (X(:,126:126) - mu_t) ./ sigma_t;
 
-X = [X_ay X_ax X_s X_t];
+X = [X_ay X_ax X_s X_t X_gz];
 
 a1 = [ones(size(X)(1),1) X];
 z2 = a1 * Theta1';

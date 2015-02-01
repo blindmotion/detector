@@ -20,7 +20,7 @@ X_s = (X(:,121:125) - mu_s) ./ sigma_s;
 X_t = (X(:,126:126) - mu_t) ./ sigma_t;
 
 X = [X_ax X_ay X_az X_gx X_gy X_gz X_s X_t];
-X = [X_ay X_ax X_s X_t];
+X = [X_ay X_ax X_s X_t X_gz];
 
 a1 = [ones(size(X)(1),1) X];
 z2 = a1 * Theta1';
@@ -112,7 +112,7 @@ if sum(y(indx)) > 0
   fprintf('\nAccuracy For 180 Left: %f, Num %d\n', mean(double(p'(indx) == y(indx))) * 100, sum(y(indx)));
 endif
 
-if (false)
+if (true)
     randname = md5sum(mat2str(rand(1,1)), true);
     fprintf('\nSaving as %s\n', randname);
 
