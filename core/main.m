@@ -23,7 +23,7 @@ c = 24 * 7 * 4;
 Xtrain = X(1:end,1:end);
 ytrain = y(1:end,1);
 lambda = 15;
-maxIter = 10000;
+maxIter = 1000;
 tolFun = 1e-7;
 input_layer_size  = size(Xtrain, 2);
 hidden_layer1_size = 8;
@@ -44,6 +44,25 @@ initial_Theta4 = randInitializeWeights(hidden_layer3_size, num_outputs);
 
 nn_params = [initial_Theta1(:) ; initial_Theta2(:); initial_Theta3(:); ...
                 initial_Theta4(:)];
+
+%%%%% Checking gradient %%%%%
+
+disp("Gradient checking...")
+
+numgrad = computeNumericalGradient( @(nn) nnCostFunction(nn, input_layer_size, hidden_layer1_size, ...
+            hidden_layer2_size, hidden_layer3_size, ...
+            num_outputs, Xtrain(1:100,:), ytrain(1:100,:), lambda), nn_params);
+
+[J, grad] = nnCostFunction(nn_params, input_layer_size, hidden_layer1_size, ...
+            hidden_layer2_size, hidden_layer3_size, ...
+            num_outputs, Xtrain(1:100,:), ytrain(1:100,:), lambda);
+
+diff = norm(numgrad-grad)/norm(numgrad+grad);
+disp("Difference (usually less than 1e-9)")
+disp(diff);
+
+
+%%%%% Other %%%%%
 
 [J, grad] = nnCostFunction(nn_params, input_layer_size, hidden_layer1_size, ...
             hidden_layer2_size, hidden_layer3_size, ...
