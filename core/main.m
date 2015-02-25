@@ -68,17 +68,19 @@ disp(diff);
             hidden_layer2_size, hidden_layer3_size, ...
             num_outputs, Xtrain, ytrain, lambda);
 
-options = optimset('MaxIter', maxIter, 'OutputFcn', @outfun, 'TolFun', tolFun,
-    'GradObj', 'on');
-
-costFunction = @(p) nnCostFunction(p, ...
-                    input_layer_size, hidden_layer1_size, hidden_layer2_size, ...
-                    hidden_layer3_size, num_outputs, ...
-                    Xtrain, ytrain, lambda);
-
-[nn_params, cost] = fminunc(costFunction, nn_params, options);
+addpath minFunc/
+options.Method = 'lbfgs';
+options.tolFun = 1e-3;
+options.maxIter = 2000;
+options.maxFunEvals = 10000;
+options.display = 'on';
 
 
+[nn_params, cost] = minFunc( @(p) nnCostFunction(p, ...
+      input_layer_size, hidden_layer1_size, hidden_layer2_size, ...
+      hidden_layer3_size, num_outputs, ...
+      Xtrain, ytrain, lambda),
+      nn_params, options);
 
 prev_size = 0;
 current_size = hidden_layer1_size * (input_layer_size + 1);
