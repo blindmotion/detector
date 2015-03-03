@@ -5,6 +5,7 @@ warning("off")
 
 arg_list = argv();
 fileDat = arg_list{1};
+outFile = arg_list{2};
 
 load(fileDat);
 
@@ -22,9 +23,9 @@ X = [X_ay X_ax X_s X_t X_gz];
 c = 24 * 7 * 4;
 Xtrain = X(1:end,1:end);
 ytrain = y(1:end,1);
-lambda = 15;
-maxIter = 1000;
-tolFun = 1e-7;
+lambda = 3;
+maxIter = 4000;
+tolFun = 1e-1;
 input_layer_size  = size(Xtrain, 2);
 hidden_layer1_size = 8;
 hidden_layer2_size = 8;
@@ -47,6 +48,8 @@ nn_params = [initial_Theta1(:) ; initial_Theta2(:); initial_Theta3(:); ...
 
 %%%%% Checking gradient %%%%%
 
+if false
+
 disp("Gradient checking...")
 
 numgrad = computeNumericalGradient( @(nn) nnCostFunction(nn, input_layer_size, hidden_layer1_size, ...
@@ -61,6 +64,7 @@ diff = norm(numgrad-grad)/norm(numgrad+grad);
 disp("Difference (usually less than 1e-9)")
 disp(diff);
 
+endif
 
 %%%%% Other %%%%%
 
@@ -70,8 +74,8 @@ disp(diff);
 
 addpath minFunc/
 options.Method = 'lbfgs';
-options.tolFun = 1e-3;
-options.maxIter = 2000;
+options.tolFun = tolFun;
+options.maxIter = maxIter;
 options.maxFunEvals = 10000;
 options.display = 'on';
 
@@ -114,7 +118,7 @@ cost
 
 toc
 
-save result.mat Theta1 Theta2 Theta3 Theta4 ...
-            mu_ax sigma_ax mu_ay sigma_ay mu_az sigma_az ...
-            mu_gx sigma_gx mu_gy sigma_gy mu_gz sigma_gz mu_s sigma_s ...
-            mu_t sigma_t
+save('-binary', outFile, 'Theta1', 'Theta2', 'Theta3', 'Theta4', ...
+    'mu_ax', 'sigma_ax', 'mu_ay', 'sigma_ay', 'mu_az', 'sigma_az', ...
+    'mu_gx', 'sigma_gx', 'mu_gy', 'sigma_gy', 'mu_gz', 'sigma_gz', ...
+    'mu_s', 'sigma_s', 'mu_t', 'sigma_t')
