@@ -34,7 +34,9 @@ EVENT_DIR_LEFT = 0
 
 TIME_DELTA_IDLE_START_END = timedelta(seconds=10)
 TIME_DELTA_EVENTS = timedelta(milliseconds=500)
+
 IDLE_TO_EVENTS_RELATION = 30 * 2
+#IDLE_TO_EVENTS_RELATION = 1
 
 num_elements_gyr_acc = 100
 num_elements_speed = 10
