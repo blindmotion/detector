@@ -79,10 +79,8 @@ def export_matrix_as_events(matrix, file):
 
     json.dump(events, file, sort_keys=False, indent=4)
 
-
-def main():
-    options = get_options()
-    data, time = load_data(options.datafile, options.timefile)
+def post_process(datafile, timefile, outfile):
+    data, time = load_data(datafile, timefile)
 
     data = np.matrix(data)
     time = np.matrix(time)
@@ -100,8 +98,13 @@ def main():
 
     result = result[result[:, 2].argsort(), :]
 
-    with open(options.outfile, 'wb') as output:
+    with open(outfile, 'wb') as output:
         export_matrix_as_events(result, output)
+
+def main():
+    options = get_options()
+
+    process(options.datafile, options.timefile, options.outfile)
 
 
 if __name__ == '__main__':

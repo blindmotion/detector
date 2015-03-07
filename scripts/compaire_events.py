@@ -114,8 +114,13 @@ def get_diff(actual, predicted):
         'correct-percent-no-fn' : correct_percent_no_fn
     }
 
-    print json.dumps(result, indent=2)
+    return result
 
+def compaire_events(actual_path, predicted_path):
+    actual = load_events(actual_path)
+    predicted = load_events(predicted_path)
+    result = get_diff(actual, predicted)
+    return result
 
 def main():
     options = get_options()
