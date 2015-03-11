@@ -5,6 +5,7 @@ __author__ = 'lamerman'
 
 import subprocess
 import tempfile
+import csv
 from os import path
 from optparse import OptionParser
 from compaire_events import compaire_events
@@ -25,6 +26,8 @@ def get_options():
                     help="Events json file to which the result will be compaired")
     parser.add_option("-g", "--events-gen-dir", dest="events_gen_dir",
                     help="Directory with generated intervals for one day")
+    parser.add_option("-p", "--program", dest="program",
+                    help="[Optional] Program with csv net parameters to be executed")
 
     (options, args) = parser.parse_args()
 
@@ -47,7 +50,7 @@ def predict_events(options, tfile_mat):
                              cwd=octave_cwd)
     return_code = proc.wait()
     if return_code != 0:
-        exit(1)
+        raise subprocess.CalledProcessError()
 
     tfile_events_json = tempfile.mktemp()
 
@@ -55,30 +58,61 @@ def predict_events(options, tfile_mat):
 
     return tfile_events_json
 
+
+def get_program_from_file(path):
+    program = []
+    with open(path, 'rb') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        for row in reader:
+            tfile = tempfile.mktemp()
+            with open(tfile, 'wb') as programfile:
+                writer = csv.writer(programfile, delimiter=',')
+                writer.writerow(row)
+
+            program.append((row, tfile))
+
+    return program
+
+
 def main():
     options = get_options()
 
-    processes = []
-    for i in xrange(options.numproc):
-        tfile = tempfile.mktemp()
-        proc = subprocess.Popen(['octave', '-q', 'main.m', options.train_data,
-            tfile], cwd=octave_cwd)
-        processes.append((proc, tfile))
+    program = [None]
+    if options.program:
+        program = get_program_from_file(options.program)
 
-    for proc, _ in processes:
-        return_code = proc.wait()
-        if return_code != 0:
-            exit(1)
+    for program_iter in program:
 
-    for _, tfile in processes:
-        try:
-            events_file = predict_events(options, tfile)
-            diff = compaire_events(options.events_json, events_file)
-            print diff
-        except Exception as e:
-            pass
+        if program_iter is not None:
+            print "Running program " + str(program_iter[0])
 
-        print '\n\n'
+        processes = []
+        print 'Config: ' + program_iter[1]
+        for i in xrange(options.numproc):
+            tfile = tempfile.mktemp()
+            if program_iter is None:
+                proc = subprocess.Popen(['octave', '-q', 'main.m', options.train_data,
+                    tfile], cwd=octave_cwd)
+            else:
+                proc = subprocess.Popen(['octave', '-q', 'main.m', options.train_data,
+                    tfile, program_iter[1]], cwd=octave_cwd)
+            processes.append((proc, tfile))
+
+        for proc, _ in processes:
+            return_code = proc.wait()
+            if return_code != 0:
+                raise subprocess.CalledProcessError()
+
+        for _, tfile in processes:
+            try:
+                print 'Result file: ' + tfile
+                events_file = predict_events(options, tfile)
+                diff = compaire_events(options.events_json, events_file)
+                print diff
+            except Exception as e:
+                pass
+
+            print '\n\n'
 
 if __name__ == '__main__':
     main()
