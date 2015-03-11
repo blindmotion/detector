@@ -7,6 +7,30 @@ arg_list = argv();
 fileDat = arg_list{1};
 outFile = arg_list{2};
 
+configFile = "";
+
+lambda = 15;
+tolFun = 1e-3;
+hidden_layer1_size = 8;
+hidden_layer2_size = 8;
+hidden_layer3_size = 8;
+
+c = 24 * 7 * 4;
+maxIter = 250;
+maxFunEvals = 10000;
+num_outputs = 15;
+
+try
+    configFile = arg_list{3};
+    config = load(configFile);
+    lambda = config(1);
+    tolFun = config(2);
+    hidden_layer1_size = config(3);
+    hidden_layer2_size = config(4);
+    hidden_layer3_size = config(5);
+catch
+end_try_catch
+
 load(fileDat);
 
 [X_ax, mu_ax, sigma_ax] = featureNormalize(X(:,1:20));
@@ -20,17 +44,9 @@ load(fileDat);
 X = [X_ax X_ay X_az X_gx X_gy X_gz X_s X_t];
 X = [X_ay X_ax X_s X_t X_gz];
 
-c = 24 * 7 * 4;
 Xtrain = X(1:end,1:end);
 ytrain = y(1:end,1);
-lambda = 3;
-maxIter = 4000;
-tolFun = 1e-1;
 input_layer_size  = size(Xtrain, 2);
-hidden_layer1_size = 8;
-hidden_layer2_size = 8;
-hidden_layer3_size = 8;
-num_outputs = 15;
 
 tic
 
@@ -76,8 +92,8 @@ addpath minFunc/
 options.Method = 'lbfgs';
 options.tolFun = tolFun;
 options.maxIter = maxIter;
-options.maxFunEvals = 10000;
-options.display = 'on';
+options.maxFunEvals = maxFunEvals;
+options.display = 'off';
 
 
 [nn_params, cost] = minFunc( @(p) nnCostFunction(p, ...

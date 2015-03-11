@@ -112,7 +112,7 @@ if sum(y(indx)) > 0
   fprintf('\nAccuracy For 180 Left: %f, Num %d\n', mean(double(p'(indx) == y(indx))) * 100, sum(y(indx)));
 endif
 
-if (true)
+if (false)
     randname = md5sum(mat2str(rand(1,1)), true);
     fprintf('\nSaving as %s\n', randname);
 
