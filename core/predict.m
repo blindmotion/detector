@@ -20,14 +20,22 @@ X_s = (X(:,121:125) - mu_s) ./ sigma_s;
 X_t = (X(:,126:126) - mu_t) ./ sigma_t;
 
 X = [X_ax X_ay X_az X_gx X_gy X_gz X_s X_t];
-X = [X_ay X_ax X_s X_t];
+X = [X_ay X_ax X_s X_t X_gz];
 
 a1 = [ones(size(X)(1),1) X];
 z2 = a1 * Theta1';
 a2 = sigmoid(z2);
 a22 = [ones(size(a2)(1), 1) a2];
 z3 = a22 * Theta2';
-a3 = h0 = sigmoid(z3);
+a3 = sigmoid(z3);
+a33 = [ones(size(a3)(1), 1) a3];
+z4 = a33 * Theta3';
+a4 = sigmoid(z4);
+a44 = [ones(size(a4)(1), 1) a4];
+z5 = a44 * Theta4';
+a5 = sigmoid(z5);
+
+h0 = a5;
 
 [dummy, p] = max(h0');
 
@@ -102,4 +110,16 @@ endif
 indx = y == 15;
 if sum(y(indx)) > 0
   fprintf('\nAccuracy For 180 Left: %f, Num %d\n', mean(double(p'(indx) == y(indx))) * 100, sum(y(indx)));
+endif
+
+if (false)
+    randname = md5sum(mat2str(rand(1,1)), true);
+    fprintf('\nSaving as %s\n', randname);
+
+    filepath = sprintf('results/all/%s.mat', randname);
+
+    save (filepath, "Theta1", "Theta2", "Theta3", "Theta4", ...
+        "mu_ax", "sigma_ax", "mu_ay", "sigma_ay", "mu_az", "sigma_az", ...
+        "mu_gx", "sigma_gx", "mu_gy", "sigma_gy", "mu_gz", "sigma_gz", "mu_s", "sigma_s", ...
+        "mu_t", "sigma_t")
 endif

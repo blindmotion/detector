@@ -81,41 +81,53 @@ def get_diff(actual, predicted):
                 one_of_predicted = True
 
         if not one_of_predicted:
-            if p_event[TYPE] in false_negative:
-                false_negative[p_event[TYPE]] += 1
+            if a_event[TYPE] in false_negative:
+                false_negative[a_event[TYPE]] += 1
             else:
-                false_negative[p_event[TYPE]] = 1
+                false_negative[a_event[TYPE]] = 1
 
-    print
-    print 'Correct type:'
-    print sum(correct_type.values())
-    print correct_type
-    print
-    print 'Wrong type:'
-    print sum(wrong_type.values())
-    print wrong_type
-    print
-    print 'False positive:'
-    print sum(false_positive.values())
-    print false_positive
-    print
-    print 'False negative:'
-    print sum(false_negative.values())
-    print false_negative
-    print
-    print 'Correct percent'
-    print float(sum(correct_type.values()))/(sum(correct_type.values()) +
+    correct_percent = float(sum(correct_type.values()))/(sum(correct_type.values()) +
                 sum(wrong_type.values()) + sum(false_positive.values()) +
                 sum(false_negative.values()))
-    print float(sum(correct_type.values()))/(sum(correct_type.values()) +
+
+    correct_percent_no_fn = float(sum(correct_type.values()))/(sum(correct_type.values()) +
                 sum(wrong_type.values()) + sum(false_positive.values()))
 
+    result = {
+        'correct' : {
+            'sum' : sum(correct_type.values()),
+            'values' : correct_type
+        },
+        'wrong' : {
+            'sum' : sum(wrong_type.values()),
+            'values' : wrong_type
+        },
+        'false-positive' : {
+            'sum' : sum(false_positive.values()),
+            'values' : false_positive
+        },
+        'false-negative' : {
+            'sum' : sum(false_negative.values()),
+            'values' : false_negative
+        },
+        'correct-percent' : correct_percent,
+        'correct-percent-no-fn' : correct_percent_no_fn
+    }
+
+    return result
+
+def compaire_events(actual_path, predicted_path):
+    actual = load_events(actual_path)
+    predicted = load_events(predicted_path)
+    result = get_diff(actual, predicted)
+    return result
 
 def main():
     options = get_options()
     actual = load_events(options.actual)
     predicted = load_events(options.predicted)
-    get_diff(actual, predicted)
+    result = get_diff(actual, predicted)
+    print json.dumps(result)
 
 if __name__ == '__main__':
     main()
