@@ -81,10 +81,10 @@ def get_diff(actual, predicted):
                 one_of_predicted = True
 
         if not one_of_predicted:
-            if p_event[TYPE] in false_negative:
-                false_negative[p_event[TYPE]] += 1
+            if a_event[TYPE] in false_negative:
+                false_negative[a_event[TYPE]] += 1
             else:
-                false_negative[p_event[TYPE]] = 1
+                false_negative[a_event[TYPE]] = 1
 
     correct_percent = float(sum(correct_type.values()))/(sum(correct_type.values()) +
                 sum(wrong_type.values()) + sum(false_positive.values()) +
@@ -126,7 +126,8 @@ def main():
     options = get_options()
     actual = load_events(options.actual)
     predicted = load_events(options.predicted)
-    get_diff(actual, predicted)
+    result = get_diff(actual, predicted)
+    print json.dumps(result)
 
 if __name__ == '__main__':
     main()

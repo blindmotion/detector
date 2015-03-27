@@ -9,14 +9,14 @@ outFile = arg_list{2};
 
 configFile = "";
 
-lambda = 15;
+lambda = 14;
 tolFun = 1e-3;
-hidden_layer1_size = 8;
+hidden_layer1_size = 16;
 hidden_layer2_size = 8;
-hidden_layer3_size = 8;
+hidden_layer3_size = 4;
 
 c = 24 * 7 * 4;
-maxIter = 250;
+maxIter = 4000;
 maxFunEvals = 10000;
 num_outputs = 15;
 

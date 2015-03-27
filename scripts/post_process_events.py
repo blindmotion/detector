@@ -19,11 +19,13 @@ def get_options():
                     help="Csv file with time of events")
     parser.add_option("-o", "--out-file", dest="outfile",
                     help="The name of output file")
+    parser.add_option("--epsilon", dest="epsilon", type="int", help="DBScan epsilon")
+    parser.add_option("--min-samples", dest="min_samples", type="int", help="DBScan min samples")
 
     (options, args) = parser.parse_args()
 
-
-    if not options.datafile or not options.timefile or not options.outfile:
+    if not options.datafile or not options.timefile or not options.outfile \
+            or not options.epsilon or not options.min_samples:
         raise KeyError('Not all required options specified')
 
     return options
@@ -79,14 +81,14 @@ def export_matrix_as_events(matrix, file):
 
     json.dump(events, file, sort_keys=False, indent=4)
 
-def post_process(datafile, timefile, outfile):
+def post_process(datafile, timefile, outfile, epsilon, min_samples):
     data, time = load_data(datafile, timefile)
 
     data = np.matrix(data)
     time = np.matrix(time)
     all = np.concatenate((data, time), axis=1)
 
-    res = DBSCAN(eps=8,min_samples=9).fit_predict(all[:, 2] + all[:, 0] * SECONDS_IN_DAY)
+    res = DBSCAN(eps=epsilon,min_samples=min_samples).fit_predict(all[:, 2] + all[:, 0] * SECONDS_IN_DAY)
 
     num_clusters = max(res) + 1
     result = np.zeros(shape=(num_clusters, all.shape[1]))
@@ -104,7 +106,7 @@ def post_process(datafile, timefile, outfile):
 def main():
     options = get_options()
 
-    process(options.datafile, options.timefile, options.outfile)
+    post_process(options.datafile, options.timefile, options.outfile, options.epsilon, options.min_samples)
 
 
 if __name__ == '__main__':

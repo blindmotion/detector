@@ -6,6 +6,7 @@ __author__ = 'lamerman'
 import subprocess
 import tempfile
 import csv
+import json
 from os import path
 from optparse import OptionParser
 from compaire_events import compaire_events
@@ -54,7 +55,7 @@ def predict_events(options, tfile_mat):
 
     tfile_events_json = tempfile.mktemp()
 
-    post_process(tfile_y, tfile_time, tfile_events_json)
+    post_process(tfile_y, tfile_time, tfile_events_json, 1, 7)
 
     return tfile_events_json
 
@@ -85,9 +86,9 @@ def main():
 
         if program_iter is not None:
             print "Running program " + str(program_iter[0])
+            print 'Config: ' + program_iter[1]
 
         processes = []
-        print 'Config: ' + program_iter[1]
         for i in xrange(options.numproc):
             tfile = tempfile.mktemp()
             if program_iter is None:
@@ -108,7 +109,8 @@ def main():
                 print 'Result file: ' + tfile
                 events_file = predict_events(options, tfile)
                 diff = compaire_events(options.events_json, events_file)
-                print diff
+                print 'next_line_is_result'
+                print json.dumps(diff)
             except Exception as e:
                 pass
 
