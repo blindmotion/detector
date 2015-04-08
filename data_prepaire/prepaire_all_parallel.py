@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# Executes prepaire.py in parallel. See documentation in
+# that file.
+
 import os
 
 BASE_PATH='/home/lamerman/work/ml/BlindMotionProject'

@@ -2,6 +2,17 @@
 # Copyright (c) 2014, Blind Motion Project
 # All rights reserved.
 
+# Takes raw car data and events json with marked events and
+# generates a file with the following structure
+#
+# event_type ; extrapolated accelerometer data x, y, z;
+# extrapolated gyroscope data x, y, z; speed; duration of event;
+#
+# Each event is written several times with some offset from original
+# event and has duration exactly as duration of original event.
+# Each idle period has random duration and is generated from the idle
+# space.
+
 import csv
 import json
 import sys
