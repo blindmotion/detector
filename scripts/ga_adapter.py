@@ -42,6 +42,26 @@ def adapt_run_train_parallel():
 
     print max_percent
 
+
+def adapt_predict_events():
+    max_percent = 0
+
+    while True:
+        line = sys.stdin.readline()
+        if not line:
+            break
+
+        if line == 'all\n':
+            try:
+                result_json = sys.stdin.readline()
+                result = json.loads(result_json)
+                max_percent = max(max_percent, result['correct-percent'])
+            except:
+                pass
+
+    print max_percent
+
+
 def main():
     opts = get_options()
 
@@ -49,6 +69,8 @@ def main():
         adapt_compaire_events()
     elif opts.type == 'run_train_parallel':
         adapt_run_train_parallel()
+    elif opts.type == 'predict_events':
+        adapt_predict_events()
     else:
         raise KeyError('Unsupported type ' + opts.type)
 
