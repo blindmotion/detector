@@ -1,18 +1,21 @@
 #!/usr/bin/python
 __author__ = 'lamerman'
 
+import sys
+sys.path.append('..')
+
 import subprocess
 import tempfile
 import csv
+import pickle
 import json
+import numpy as np
 from os import path
 from optparse import OptionParser
-from compaire_events import compaire_events
-from post_process_events import post_process
+from scripts.compaire_events import compaire_events
+from scripts.post_process_events import post_process
 
 script_path = path.dirname(path.realpath(__file__))
-octave_cwd = path.join(script_path, '../core')
-
 
 def vararg_callback(option, opt_str, value, parser):
     assert value is None
@@ -47,12 +50,16 @@ def get_options():
                     help="DBScan epsilon")
     parser.add_option("--min-samples", dest="min_samples", type="int",
                     help="DBScan min samples")
+    parser.add_option("--threshold", dest="threshold", type="float",
+                    help="How confident the classifer should be "
+                         "before marking an event")
 
     (options, args) = parser.parse_args()
 
     if not options.models or not options.events_dates\
             or not options.events_gen_dir or not options.events_dir\
-            or not options.epsilon or not options.min_samples:
+            or not options.epsilon or not options.min_samples\
+            or not options.threshold:
         raise KeyError('Not all required options specified')
 
     return options
@@ -62,15 +69,34 @@ def predict_events(options, event_date, tfile_mat):
     tfile_y = tempfile.mktemp()
     tfile_time = tempfile.mktemp()
 
-    raw_data_mat = path.join(options.events_gen_dir, event_date, 'data.mat')
+    raw_data_mat = path.join(options.events_gen_dir, event_date, 'data.npz')
     raw_data_time = path.join(options.events_gen_dir, event_date, 'time.csv')
 
-    proc = subprocess.Popen(['octave', '-q', 'predict_events.m', tfile_mat,
-                             raw_data_mat, raw_data_time, tfile_y, tfile_time],
-                             cwd=octave_cwd)
-    return_code = proc.wait()
-    if return_code != 0:
-        raise subprocess.CalledProcessError()
+    dataset = np.load(raw_data_mat)
+    time = np.loadtxt(raw_data_time, dtype=np.str_)
+
+    X = dataset['X']
+
+    clf = None
+    with open(options.models, 'r') as f:
+        clf = pickle.load(f)
+
+    prob = clf.predict_proba(X)
+    y = clf.predict(X)
+
+    indx = np.max(prob, axis=1) > options.threshold
+    y = y[indx]
+    time = time[indx]
+
+    indx = y != 1
+    y = y[indx]
+    time = time[indx]
+
+    with open(tfile_y, 'wb') as f:
+        np.savetxt(f, y, delimiter=',', fmt='%d')
+
+    with open(tfile_time, 'wb') as f:
+        np.savetxt(f, time, fmt='%s')
 
     tfile_events_json = tempfile.mktemp()
 

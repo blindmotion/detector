@@ -23,7 +23,7 @@ datesTrain = [
     ('2014-10-14', '20141014'),
 ]
 
-datesCV = [
+datesCv = [
     ('2014-09-18', '20140918'),
     ('2014-12-16', '20141216'),
     ('2014-11-25', '20141125'),
@@ -38,6 +38,7 @@ datesTest = [
 # cleanup
 
 os.system('rm {WORK_PATH}/outTrain.csv'.format(WORK_PATH=WORK_PATH))
+os.system('rm {WORK_PATH}/outCv.csv'.format(WORK_PATH=WORK_PATH))
 
 # train
 
@@ -45,8 +46,14 @@ for dat in datesTrain:
     os.system('cat {WORK_PATH}/out-{date}.csv >> {WORK_PATH}/outTrain.csv'.
         format(WORK_PATH=WORK_PATH, date=dat[0]))
 
+for dat in datesCv:
+    os.system('cat {WORK_PATH}/out-{date}.csv >> {WORK_PATH}/outCv.csv'.
+        format(WORK_PATH=WORK_PATH, date=dat[0]))
+
 os.system('octave -q {BASE_PATH}/code/detector/core/prepaire.m \
     {WORK_PATH}/outTrain.csv {WORK_PATH}/outTrain.mat'
     .format(BASE_PATH=BASE_PATH, WORK_PATH=WORK_PATH))
 
-os.system('rm {WORK_PATH}/outTrain.csv'.format(WORK_PATH=WORK_PATH))
+os.system('octave -q {BASE_PATH}/code/detector/core/prepaire.m \
+    {WORK_PATH}/outCv.csv {WORK_PATH}/outCv.mat'
+    .format(BASE_PATH=BASE_PATH, WORK_PATH=WORK_PATH))

@@ -40,7 +40,6 @@ def load_data(datafile, timefile):
 
         for row in csvreader:
             row[0] = int(row[0])
-            row[1] = float(row[1])
             data.append(row)
 
     with open(timefile, 'rb') as input:
@@ -71,8 +70,8 @@ def export_matrix_as_events(matrix, file):
         event['type'] = int(row[0]/2 - 1)
         event['direction'] = int(row[0] % 2)
 
-        start_date = dt + datetime.timedelta(seconds=round(row[2]))
-        end_date = dt + datetime.timedelta(seconds=round(row[3]))
+        start_date = dt + datetime.timedelta(seconds=round(row[1]))
+        end_date = dt + datetime.timedelta(seconds=round(row[2]))
 
         event['start'] = start_date.strftime(TIME_FORMAT_SHORT)
         event['end'] = end_date.strftime(TIME_FORMAT_SHORT)
@@ -80,6 +79,7 @@ def export_matrix_as_events(matrix, file):
         events.append(event)
 
     json.dump(events, file, sort_keys=False, indent=4)
+
 
 def post_process(datafile, timefile, outfile, epsilon, min_samples):
     data, time = load_data(datafile, timefile)
@@ -102,6 +102,7 @@ def post_process(datafile, timefile, outfile, epsilon, min_samples):
 
     with open(outfile, 'wb') as output:
         export_matrix_as_events(result, output)
+
 
 def main():
     options = get_options()
