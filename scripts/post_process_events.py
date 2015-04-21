@@ -39,8 +39,7 @@ def load_data(datafile, timefile):
         csvreader = csv.reader(input, delimiter=',')
 
         for row in csvreader:
-            row[0] = int(row[0])
-            data.append(row)
+            data.append([int(row[0])])
 
     with open(timefile, 'rb') as input:
         csvreader = csv.reader(input, delimiter=',')
@@ -86,9 +85,11 @@ def post_process(datafile, timefile, outfile, epsilon, min_samples):
 
     data = np.matrix(data)
     time = np.matrix(time)
+
     all = np.concatenate((data, time), axis=1)
 
-    res = DBSCAN(eps=epsilon,min_samples=min_samples).fit_predict(all[:, 2] + all[:, 0] * SECONDS_IN_DAY)
+    res = DBSCAN(eps=epsilon,min_samples=min_samples).\
+        fit_predict(all[:, 1] + all[:, 0] * SECONDS_IN_DAY)
 
     num_clusters = max(res) + 1
     result = np.zeros(shape=(num_clusters, all.shape[1]))
@@ -107,7 +108,8 @@ def post_process(datafile, timefile, outfile, epsilon, min_samples):
 def main():
     options = get_options()
 
-    post_process(options.datafile, options.timefile, options.outfile, options.epsilon, options.min_samples)
+    post_process(options.datafile, options.timefile, options.outfile,
+                 options.epsilon, options.min_samples)
 
 
 if __name__ == '__main__':
